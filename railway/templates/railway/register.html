@@ -1,0 +1,121 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IRCTC — Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+
+    <!-- Top Utility Bar with Marquee -->
+    <div class="bg-slate-900 text-slate-300 text-xs px-6 py-2.5 flex justify-between items-center overflow-hidden border-b border-slate-800 shadow-inner">
+        <div class="w-full flex items-center space-x-2">
+            <span class="bg-amber-400 text-slate-950 font-bold text-[10px] px-2 py-0.5 rounded tracking-wide uppercase shrink-0">Updates</span>
+            <marquee behavior="scroll" direction="left" scrollamount="5" class="text-amber-300 font-semibold tracking-wide">
+                Welcome to Indian Railway, Book your Tickets with offers and Snacks 🚆✨
+            </marquee>
+        </div>
+    </div>
+
+    <!-- Main Navigation Header -->
+    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="bg-gradient-to-tr from-orange-600 to-amber-500 p-2 rounded-xl text-white font-bold tracking-wider text-xs shadow-lg shadow-orange-600/20">IR</div>
+            <div>
+                <span class="text-sm font-bold tracking-tight block text-white">RAILWAY NEXT GEN</span>
+                <span class="text-[10px] text-slate-400 uppercase tracking-widest">Indian Railways</span>
+            </div>
+        </div>
+        <nav class="hidden md:flex space-x-6 text-sm font-medium items-center">
+            <a href="{% url 'login' %}" class="text-orange-500 border-b-2 border-orange-500 pb-1 font-bold">Login</a>
+            <a href="{% url 'register' %}" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-lg shadow-orange-600/20">Register</a>
+        </nav>
+    </header>
+
+    <!-- Hero Section / Split Screen (Form Left, Image Right) -->
+    <main class="relative flex-grow grid grid-cols-1 lg:grid-cols-12 w-full overflow-hidden">
+        
+        <!-- Left Side: Dark Card Form Container -->
+        <div class="lg:col-span-5 bg-slate-900 border-r border-slate-800 flex flex-col justify-center p-8 lg:p-12 shadow-2xl relative z-20">
+            
+            <div class="mb-8">
+                <h1 class="text-3xl font-extrabold tracking-tight text-white mb-2">SIGN IN.</h1>
+                <p class="text-xs text-slate-400">Please enter your user credentials below to access your account.</p>
+            </div>
+
+            <!-- Login Form -->
+            <form method="POST" action="" class="space-y-4">
+                {% csrf_token %}
+                
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 focus-within:border-orange-500 transition">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">User Name</label>
+                    <input type="text" name="username" placeholder="Enter User Name" required class="w-full bg-transparent text-white focus:outline-none font-semibold text-sm">
+                </div>
+
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 focus-within:border-orange-500 transition">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Password</label>
+                    <input type="password" name="password" placeholder="Enter Password" required class="w-full bg-transparent text-white focus:outline-none font-semibold text-sm">
+                </div>
+
+                <!-- Captcha Row -->
+                <div class="grid grid-cols-2 gap-3 items-center">
+                    <div class="bg-slate-950 border border-slate-800 p-3 text-center rounded-2xl font-mono font-bold tracking-widest text-orange-400 select-none text-sm">
+                        X7k9P2
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 focus-within:border-orange-500 transition">
+                        <input type="text" placeholder="Enter Captcha" class="w-full bg-transparent text-xs text-white focus:outline-none font-semibold">
+                    </div>
+                </div>
+
+                <button type="submit" name="action" value="login" class="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-orange-600/30 transition tracking-wide text-sm mt-2">
+                    SIGN IN
+                </button>
+
+                <div class="flex justify-between items-center text-xs pt-2 text-slate-400 font-medium">
+                    <a href="#" class="hover:text-orange-400 transition">Forgot User ID?</a>
+                    <a href="#" class="hover:text-orange-400 transition">Forgot Password?</a>
+                </div>
+            </form>
+
+            <!-- Bottom Prompt to Switch to Register -->
+            <div class="mt-8 pt-6 border-t border-slate-800 text-xs text-slate-400 flex justify-between items-center">
+                <span>Don't have an account?</span>
+                <a href="{% url 'register' %}" class="text-orange-500 font-bold hover:underline">Create one</a>
+            </div>
+
+        </div>
+
+        <!-- Right Side: Train Visual / Banner using Django Static or fallback image -->
+        <div class="lg:col-span-7 relative bg-slate-900 min-h-[400px] lg:min-h-full flex items-center overflow-hidden">
+            
+            <!-- Decorative Orange Vertical Overlay Stripe on the right edge -->
+            <div class="absolute right-12 top-0 bottom-0 w-36 bg-orange-600/90 backdrop-blur-sm hidden md:flex flex-col justify-center items-center p-6 shadow-2xl z-20">
+                <span class="text-white font-black text-4xl tracking-widest [writing-mode:vertical-lr] rotate-180 uppercase opacity-90">RAILWAY</span>
+            </div>
+
+            <!-- Train Image Container -->
+            <div class="absolute inset-y-0 right-0 left-0 md:right-48 flex items-center justify-center p-6">
+                <div class="relative w-full h-full max-h-[85%] rounded-2xl overflow-hidden border border-slate-700/60 shadow-2xl bg-slate-950">
+                    <!-- Local static image tag (or switch src to your static tag if file layout is fixed) -->
+                    <img src="{% static 'railway/train.jpg' %}" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Vande_Bharat_Express_at_Varanasi.jpg/1280px-Vande_Bharat_Express_at_Varanasi.jpg';" alt="Vande Bharat Train" class="w-full h-full object-cover transform hover:scale-105 transition duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+                    
+                    <!-- Floating Caption Badge -->
+                    <div class="absolute bottom-6 left-6 flex items-center space-x-3 bg-slate-900/90 backdrop-blur-md border border-slate-700 p-3 rounded-xl shadow-lg">
+                        <span class="h-2.5 w-2.5 rounded-full bg-orange-500 animate-pulse"></span>
+                        <span class="text-xs font-bold text-white tracking-wide">Next-Gen High Speed Rail</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>

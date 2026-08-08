@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Railway App - Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background-color: #12121c;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Background Railway Image with Dark Overlay */
+    .bg-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(rgba(18, 18, 28, 0.6), rgba(18, 18, 28, 0.6)), 
+                  url('https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
+      z-index: 1;
+    }
+
+    /* Top Navigation Bar */
+    .topnav {
+      position: absolute;
+      top: 20px;
+      z-index: 3;
+      display: flex;
+      gap: 10px;
+      background: rgba(20, 20, 30, 0.8);
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .topnav a {
+      color: #aaa;
+      text-decoration: none;
+      font-size: 12px;
+      padding: 6px 14px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .topnav a:hover, .topnav a.active {
+      color: #fff;
+    }
+
+    /* Centered White Card */
+    .auth-card {
+      position: relative;
+      z-index: 2;
+      background: #ffffff;
+      width: 100%;
+      max-width: 380px;
+      padding: 30px;
+      border-radius: 6px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      text-align: center;
+    }
+
+    .auth-card h2 {
+      font-size: 24px;
+      font-weight: 500;
+      color: #222;
+      margin-bottom: 25px;
+    }
+
+    /* Toggle Switch Buttons (Login / SignUp) */
+    .toggle-box {
+      display: flex;
+      background: #f1f1f1;
+      border-radius: 4px;
+      padding: 3px;
+      margin-bottom: 25px;
+      border: 1px solid #ddd;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #666;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.3s ease;
+    }
+
+    .toggle-btn.active-login {
+      background: linear-gradient(135deg, #00f2fe, #4facfe);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(79, 172, 254, 0.4);
+    }
+
+    .toggle-btn.active-signup {
+      background: linear-gradient(135deg, #00f2fe, #4facfe);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(79, 172, 254, 0.4);
+    }
+
+    /* Form Inputs */
+    .input-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #333;
+      background: #fafafa;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-field:focus {
+      border-color: #4facfe;
+      background: #fff;
+    }
+
+    /* Action Links & Buttons */
+    .forgot-link {
+      display: block;
+      text-align: right;
+      font-size: 11px;
+      color: #ff6584;
+      text-decoration: none;
+      margin-bottom: 20px;
+      margin-top: -5px;
+    }
+
+    .forgot-link:hover {
+      text-decoration: underline;
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 114, 255, 0.3);
+      transition: opacity 0.2s;
+    }
+
+    .submit-btn:hover {
+      opacity: 0.9;
+    }
+
+    .switch-auth-text {
+      font-size: 12px;
+      color: #777;
+      margin-top: 20px;
+    }
+
+    .switch-auth-text a {
+      color: #ff6584;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .switch-auth-text a:hover {
+      text-decoration: underline;
+    }
+
+    .admin-link {
+      display: block;
+      margin-top: 15px;
+      font-size: 11px;
+      color: #ff6584;
+      text-decoration: none;
+    }
+
+    .admin-link:hover {
+      text-decoration: underline;
+    }
+
+    .form-panel {
+      display: none;
+    }
+
+    .form-panel.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Scenic Railway Background Layer -->
+  <div class="bg-container"></div>
+
+  <!-- Top Navigation Bar -->
+  <!--<div class="topnav">
+    <a href="#" class="active">Home</a>
+    <a href="#" onclick="switchTab('login')">Login</a>
+    <a href="#">About</a>
+    <a href="#">Contact Us</a>
+  </div>-->
+
+  <!-- Central Box Card -->
+  <div class="auth-card">
+    
+    <!-- Toggle Switcher -->
+    <div class="toggle-box">
+      <button id="loginTabBtn" class="toggle-btn active-login" onclick="switchTab('login')">Login</button>
+      <button id="signupTabBtn" class="toggle-btn" onclick="switchTab('signup')">SignUp</button>
+    </div>
+
+    <!-- Login Form Panel -->
+    <div id="loginPanel" class="form-panel active">
+      <h2>Login Form</h2>
+      <form onsubmit="handleRedirect(event)">
+        <div class="input-group">
+          <input type="email" class="input-field" placeholder="Email Address" required>
+        </div>
+        <div class="input-group">
+          <input type="password" class="input-field" placeholder="Password" required>
+        </div>
+        <a href="#" class="forgot-link">Forgot password?</a>
+        <button type="submit" class="submit-btn">Login</button>
+      </form>
+      <div class="switch-auth-text">
+        Not a member? <a href="#" onclick="switchTab('signup')">Sign-Up</a>
+      </div>
+    </div>
+
+    <!-- Signup Form Panel -->
+    <div id="signupPanel" class="form-panel">
+      <h2>Signup Form</h2>
+      <form onsubmit="handleRedirect(event)">
+        <div class="input-group">
+          <input type="text" class="input-field" placeholder="Full Name" required>
+        </div>
+        <div class="input-group">
+          <input type="email" class="input-field" placeholder="Email Address" required>
+        </div>
+        <div class="input-group">
+          <input type="password" class="input-field" placeholder="Create Password" required>
+        </div>
+        <button type="submit" class="submit-btn" style="margin-top: 10px;">Register</button>
+      </form>
+      <div class="switch-auth-text">
+        Already a member? <a href="#" onclick="switchTab('login')">Login</a>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      const loginPanel = document.getElementById('loginPanel');
+      const signupPanel = document.getElementById('signupPanel');
+      const loginBtn = document.getElementById('loginTabBtn');
+      const signupBtn = document.getElementById('signupTabBtn');
+
+      if (tab === 'login') {
+        loginPanel.classList.add('active');
+        signupPanel.classList.remove('active');
+        loginBtn.className = 'toggle-btn active-login';
+        signupBtn.className = 'toggle-btn';
+      } else {
+        signupPanel.classList.add('active');
+        loginPanel.classList.remove('active');
+        signupBtn.className = 'toggle-btn active-signup';
+        loginBtn.className = 'toggle-btn';
+      }
+    }
+
+    // Redirects user straight to your Django dashboard route (/dashboard/) instead of index.html
+    function handleRedirect(event) {
+      event.preventDefault();
+      window.location.href = '/dashboard/';
+    }
+  </script>
+
+</body>
+</html>
