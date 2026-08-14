@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservation Chart — RailFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center p-4 md:p-6">
+
+    <div class="max-w-4xl w-full bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-200 space-y-6">
+        
+        <!-- Header -->
+        <div>
+            <a href="{% url 'train_list' %}" class="text-sm font-semibold text-indigo-600 hover:underline">← Back to Train List</a>
+            <h1 class="text-2xl font-extrabold text-slate-900 mt-1">Reservation Chart & Occupancy</h1>
+            <p class="text-slate-500 text-sm">Passenger manifest and booked seats chart for {{ train.name }} ({{ train.train_number }})</p>
+        </div>
+
+        <!-- Filter Form -->
+        <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Travel Date</label>
+                <input type="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Coach Class</label>
+                <select name="class" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-sm focus:outline-none focus:border-indigo-500 font-semibold text-indigo-600">
+                    {% for c in available_classes %}
+                        <option value="{{ c }}" {% if selected_class == c %}selected{% endif %}>Class {{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+
+        <!-- Manifest Table -->
+        <div class="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+                        <th class="p-4 font-semibold">Seat / Berth</th>
+                        <th class="p-4 font-semibold">Passenger Name</th>
+                        <th class="p-4 font-semibold">PNR Number</th>
+                        <th class="p-4 font-semibold">Booking Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm">
+                    {% if booked_seats %}
+                        {% for seat in booked_seats %}
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="p-4 font-extrabold text-indigo-600">
+                                    {{ seat.coach_class }}-{{ seat.seat_number }}
+                                </td>
+                                <td class="p-4 font-semibold text-slate-900">
+                                    {% if seat.booking and seat.booking.passenger_name %}
+                                        {{ seat.booking.passenger_name }}
+                                    {% else %}
+                                        Reserved
+                                    {% endif %}
+                                </td>
+                                <td class="p-4 text-slate-600 font-mono text-xs">
+                                    {% if seat.booking and seat.booking.pnr %}
+                                        {{ seat.booking.pnr }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td class="p-4 text-slate-500 text-xs">
+                                    {% if seat.travel_date %}
+                                        {{ seat.travel_date }}
+                                    {% else %}
+                                        {{ selected_date }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-8 text-slate-400">
+                                ⚠️ No confirmed seat reservations found for class <strong>{{ selected_class }}</strong> on <strong>{{ selected_date }}</strong>.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</body>
+</html>

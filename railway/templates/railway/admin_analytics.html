@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Analytics Dashboard — RailFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <header class="bg-white/90 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center shadow-sm border-b border-slate-200">
+        <div class="flex items-center space-x-3">
+            <div class="bg-gradient-to-tr from-indigo-600 to-rose-500 p-2.5 rounded-xl text-white font-bold tracking-wider">RF</div>
+            <span class="text-xl font-bold tracking-tight text-slate-900">RailFlow Admin Console</span>
+        </div>
+        <nav class="flex space-x-6 text-sm font-medium text-slate-600">
+            <a href="{% url 'index' %}" class="hover:text-indigo-600 transition">Dashboard</a>
+            <a href="{% url 'admin_analytics' %}" class="text-indigo-600 font-semibold">Analytics & Revenue</a>
+        </nav>
+    </header>
+
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-8 space-y-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-extrabold text-slate-900">Platform Financial & Operations Analytics</h1>
+                <p class="text-xs text-slate-500 mt-1">Restricted staff-only metrics dashboard for ticketing and onboard catering.</p>
+            </div>
+            <span class="text-xs bg-rose-50 text-rose-600 border border-rose-200 px-3 py-1 rounded-full font-bold">Admin Privileges Active</span>
+        </div>
+
+        <!-- Top Metric Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                <div class="text-xs font-semibold text-slate-400 uppercase">Train Ticket Revenue</div>
+                <div class="text-2xl font-extrabold text-slate-900">₹{{ total_train_revenue }}</div>
+                <div class="text-xs text-emerald-600 font-medium">{{ total_tickets_sold }} confirmed tickets</div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                <div class="text-xs font-semibold text-slate-400 uppercase">Catering Food Revenue</div>
+                <div class="text-2xl font-extrabold text-indigo-600">₹{{ total_food_revenue }}</div>
+                <div class="text-xs text-slate-500 font-medium">{{ total_food_orders_count }} total meal packages</div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                <div class="text-xs font-semibold text-slate-400 uppercase">Paid Online / Bookings</div>
+                <div class="text-2xl font-extrabold text-emerald-600">₹{{ online_food_revenue }}</div>
+                <div class="text-xs text-slate-500 font-medium">Collected digitally</div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                <div class="text-xs font-semibold text-slate-400 uppercase">Pending On-Train Collection</div>
+                <div class="text-2xl font-extrabold text-amber-600">₹{{ ontrain_pending_revenue }}</div>
+                <div class="text-xs text-slate-500 font-medium">To be collected by staff</div>
+            </div>
+        </div>
+
+        <!-- Secondary Financial Breakdown Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Popular Menu Items Table -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="font-bold text-slate-900 text-base">Popular Menu Items Breakdown</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-slate-400 font-semibold uppercase">
+                                <th class="py-2">Item Name</th>
+                                <th class="py-2 text-center">Orders</th>
+                                <th class="py-2 text-right">Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            {% for item in popular_items %}
+                            <tr>
+                                <td class="py-3 font-semibold text-slate-800">{{ item.item_name }}</td>
+                                <td class="py-3 text-center font-mono">{{ item.order_count }}</td>
+                                <td class="py-3 text-right font-bold text-indigo-600">₹{{ item.revenue }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="py-4 text-center text-slate-400">No food orders recorded yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recent Food Orders Stream -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="font-bold text-slate-900 text-base">Recent Food Orders Stream</h3>
+                <div class="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                    {% for order in recent_food_orders %}
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center text-xs">
+                        <div>
+                            <div class="font-bold text-slate-800">{{ order.quantity }}x {{ order.item_name }}</div>
+                            <div class="text-slate-500">PNR: <span class="font-mono font-bold">{{ order.booking.pnr }}</span> • Stop: {{ order.station_stop }}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-extrabold text-indigo-600">₹{{ order.total_amount }}</div>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold {% if order.is_paid %}bg-emerald-50 text-emerald-600 border border-emerald-200{% else %}bg-amber-50 text-amber-600 border border-amber-200{% endif %}">
+                                {{ order.payment_mode }}
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-xs text-slate-400 py-6">No recent orders.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

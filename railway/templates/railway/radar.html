@@ -3,202 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RailRadar — Live Train Tracking System</title>
+    <title>Live Train Radar Map — RailFlow</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Leaflet CSS -->
+    <!-- Leaflet CSS for Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Tahoma, sans-serif; }
-        #map { height: 100%; width: 100%; position: absolute; inset: 0; z-index: 0; }
-        
-        /* Custom Classic RailRadar Arrow Markers */
-        .train-icon-blue {
-            width: 0; height: 0;
-            border-top: 4px solid transparent;
-            border-bottom: 4px solid transparent;
-            border-left: 9px solid #2563eb;
-            filter: drop-shadow(0 0 1px rgba(0,0,0,0.8));
-            transition: all 1s linear;
-        }
-        .train-icon-red {
-            width: 0; height: 0;
-            border-top: 4px solid transparent;
-            border-bottom: 4px solid transparent;
-            border-right: 9px solid #dc2626;
-            filter: drop-shadow(0 0 1px rgba(0,0,0,0.8));
-            transition: all 1s linear;
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        #map { height: 500px; width: 100%; border-radius: 1.5rem; }
+        /* Clean Light Popup Styling for Leaflet */
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #cbd5e1;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
-<body class="bg-black text-slate-100 h-screen flex flex-col overflow-hidden select-none">
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
 
-    <!-- Top Navigation / Search Header -->
-    <header class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-700 px-4 py-2.5 flex justify-between items-center z-30 shadow-lg">
+    <!-- Navbar -->
+    <header class="bg-white/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex justify-between items-center border-b border-slate-200 shadow-sm">
         <div class="flex items-center space-x-3">
-            <a href="{% url 'index' %}" class="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-1.5 rounded text-slate-200 font-bold border border-slate-600 transition">◀ Dashboard</a>
-            <h1 class="text-sm font-bold tracking-wider text-cyan-400 uppercase">RailRadar &mdash; National Train Enquiry System</h1>
+            <div class="bg-gradient-to-tr from-indigo-600 to-rose-500 p-2.5 rounded-xl text-white font-bold tracking-wider shadow-lg shadow-indigo-600/20">RF</div>
+            <span class="text-xl font-bold tracking-tight text-slate-900">Thomas And The Rails</span>
         </div>
-        
-        <!-- Search Form -->
-        <form action="{% url 'radar' %}" method="GET" class="flex items-center space-x-2">
-            <input type="text" name="train_number" value="{{ query|default:'' }}" placeholder="Enter Train No (e.g. 68744)" class="bg-slate-950 border border-slate-600 text-xs px-3 py-1.5 rounded text-white focus:outline-none focus:border-cyan-400 w-56">
-            <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-1.5 rounded shadow border border-blue-500 transition">
-                Locate Train
+        <nav class="hidden md:flex space-x-8 text-sm font-medium text-slate-600">
+            <a href="{% url 'index' %}" class="hover:text-indigo-600 transition">Book Ticket</a>
+            <a href="{% url 'my_bookings' %}" class="hover:text-indigo-600 transition">My Bookings</a>
+            <a href="{% url 'radar' %}" class="text-indigo-600 font-semibold transition">Live Train Radar</a>
+        </nav>
+        <a href="{% url 'login' %}">
+            <button class="bg-indigo-600 hover:bg-indigo-500 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition shadow-lg shadow-indigo-600/20">
+                Sign In / Login
             </button>
-        </form>
+        </a>
     </header>
 
-    <!-- Main Workspace Container -->
-    <div class="flex flex-1 relative overflow-hidden">
+    <!-- Main Container -->
+    <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-8 space-y-6">
         
-        <!-- Left Vertical Control Toolbar -->
-        <div class="w-12 bg-slate-900/90 border-r border-slate-800 flex flex-col items-center py-4 space-y-6 z-20 text-[10px] text-slate-400 backdrop-blur-sm">
-            <div class="writing-mode-vertical uppercase tracking-widest cursor-pointer hover:text-white">Search</div>
-            <div class="writing-mode-vertical uppercase tracking-widest cursor-pointer hover:text-white">Info</div>
-            <div class="writing-mode-vertical uppercase tracking-widest cursor-pointer hover:text-white">Legend</div>
+        <!-- Search Card -->
+        <div class="bg-white p-6 rounded-3xl shadow-xl border border-slate-200 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900">Live Train Radar Map</h2>
+                <p class="text-slate-500 text-sm">Red tracks show rail routes • Green markers show live moving trains.</p>
+            </div>
+            <form method="GET" action="" class="flex gap-2 w-full md:w-auto">
+                <input type="text" name="train_number" placeholder="Enter Train (e.g. TRN104)" value="{{ query }}" class="bg-slate-50 border border-slate-300 p-3 rounded-xl text-sm focus:outline-none focus:border-indigo-600 text-slate-900 font-medium uppercase w-full md:w-64">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 px-5 py-3 rounded-xl text-sm font-semibold text-white transition shadow-lg shadow-indigo-600/25 whitespace-nowrap">
+                    Track on Map
+                </button>
+            </form>
         </div>
 
-        <!-- Central Interactive Map Screen Area -->
-        <div class="relative flex-1 overflow-hidden">
-            
-            <!-- Leaflet Map Canvas -->
+        <!-- Interactive Map Container -->
+        <div class="bg-white border border-slate-200 p-3 rounded-3xl shadow-2xl relative">
             <div id="map"></div>
-
-            <!-- ACTIVE TRAIN POPUP CARD -->
-            {% if query %}
-                {% if train %}
-                    <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-30 max-w-lg w-full bg-slate-950/95 border-2 border-slate-600 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-md mx-4 text-xs">
-                        
-                        <!-- Top Header Bar -->
-                        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-4 py-3 border-b border-slate-700 flex justify-between items-center text-white font-bold">
-                            <span class="tracking-wide text-cyan-300">{{ train.train_number }} &mdash; {{ train.name|upper }}</span>
-                            <a href="{% url 'radar' %}" class="text-slate-400 hover:text-white font-bold text-sm bg-slate-800 px-2 py-0.5 rounded border border-slate-700">&times;</a>
-                        </div>
-
-                        <!-- Card Body Split Layout -->
-                        <div class="grid grid-cols-12 p-3 gap-3 items-stretch">
-                            <div class="col-span-4 bg-gradient-to-b from-blue-950 to-slate-900 border border-blue-900/50 p-3 rounded-lg text-center flex flex-col justify-center">
-                                <span class="text-[9px] uppercase tracking-wider text-blue-300 font-semibold">Started on</span>
-                                <div class="text-2xl font-black text-white my-0.5 tracking-tight">11</div>
-                                <span class="text-[10px] font-bold text-blue-200">Thursday</span>
-                            </div>
-
-                            <div class="col-span-8 bg-slate-900/80 border border-slate-800 p-3 rounded-lg space-y-2 flex flex-col justify-center text-slate-300">
-                                <div class="flex justify-between border-b border-slate-800 pb-1">
-                                    <span class="text-slate-400">Last Update:</span>
-                                    <span class="font-bold text-white">SALWA</span>
-                                </div>
-                                <div class="flex justify-between border-b border-slate-800 pb-1">
-                                    <span class="text-slate-400">Next Halt:</span>
-                                    <span class="font-bold text-emerald-400">CHACHER</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-slate-400">Last Status:</span>
-                                    <span class="font-bold text-amber-400">9m delay</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Action Links Panel -->
-                        <div class="bg-slate-900 px-4 py-2.5 border-t border-slate-800 flex justify-between items-center text-[11px]">
-                            <a href="{% url 'checkout' train.id %}" class="text-cyan-400 font-bold hover:underline">&raquo; Book Ticket for this Train</a>
-                            <div class="space-x-3">
-                                <a href="#" class="text-yellow-400 hover:underline font-semibold">Show Stops</a>
-                                <a href="#" class="text-yellow-400 hover:underline font-semibold">Mark favorite</a>
-                            </div>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-30 bg-slate-900 border border-red-500/50 p-5 rounded-xl shadow-2xl text-center max-w-sm">
-                        <p class="text-red-400 font-bold text-sm">Train number "{{ query }}" could not be located on the active grid.</p>
-                        <p class="text-slate-400 text-xs mt-1">Please verify the train ID from your dashboard catalog.</p>
-                    </div>
-                {% endif %}
-            {% endif %}
-
         </div>
-    </div>
 
-    <!-- Leaflet JS & Real Tracks + Train Animation Script -->
+        <!-- Radar Result Card -->
+        {% if train %}
+        <div class="bg-white border border-slate-200 p-6 rounded-3xl shadow-xl space-y-6">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-4">
+                <div class="flex items-center space-x-3">
+                    <span class="text-indigo-600 font-bold tracking-wide">{{ train.train_number }}</span>
+                    <span class="text-slate-400">—</span>
+                    <h3 class="text-lg font-bold text-slate-900 uppercase tracking-wider">{{ train.name }}</h3>
+                </div>
+                <span class="text-xs bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1 rounded-full font-bold">Active on Route</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-50 border border-slate-200 p-5 rounded-2xl flex flex-col justify-center space-y-2">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-widest">Started On</span>
+                    <div class="text-3xl font-extrabold text-slate-900">10 AM</div>
+                    <div class="text-sm font-medium text-slate-500">Scheduled Daily</div>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-3 flex flex-col justify-center">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-slate-500 font-medium">Last Update:</span>
+                        <span class="font-bold text-slate-900">SALWA</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-slate-500 font-medium">Next Halt:</span>
+                        <span class="font-bold text-emerald-600">CHACHER</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-slate-500 font-medium">Delay Status:</span>
+                        <span class="font-bold text-emerald-600">On Time (14 Stops Total)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-2 border-t border-slate-200 text-sm">
+                <a href="{% url 'checkout' train.id %}" class="text-indigo-600 hover:text-indigo-700 font-bold transition">
+                    » Book Ticket for this Train
+                </a>
+                <button onclick="alert('Added to your favorite tracked routes!')" class="text-amber-600 hover:text-amber-700 font-bold transition">
+                    Mark favorite ★
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        var map = L.map('map', { zoomControl: false }).setView([22.5937, 78.9629], 5);
+        // Initialize Map centered over India
+        const map = L.map('map').setView([22.5937, 78.9629], 5);
 
+        // Standard clean light theme map tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 18,
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        L.control.zoom({ position: 'topleft' }).addTo(map);
-
-        // Define exact major railway routes matching your reference map layout
+        // Define Train Tracks (Red Lines) & Route Paths
         const railwayRoutes = [
-            // Delhi to Jodhpur via Jaipur/Agra
-            [[28.61, 77.20], [26.91, 75.78], [26.28, 73.02]],
-            // Delhi to Bhopal & Mumbai
-            [[28.61, 77.20], [23.25, 77.41], [19.07, 72.87]],
-            // Delhi to Lucknow & Siliguri to New Tinsukia
-            [[28.61, 77.20], [26.84, 80.94], [26.71, 88.43], [27.49, 94.91]],
-            // Calcutta to Vijayawada & Chennai
-            [[22.57, 88.36], [16.50, 80.64], [13.08, 80.27]],
-            // Mumbai to Panaji & Madurai
-            [[19.07, 72.87], [15.49, 73.82], [9.92, 78.11]],
-            // Wadi connector between Mumbai line and Secunderabad/Vijayawada
-            [[19.07, 72.87], [17.44, 76.83], [17.38, 78.48], [16.50, 80.64]]
+            {
+                name: "Sampark Kranti (TRN104)",
+                path: [[12.9716, 77.5946], [15.3173, 75.7139], [17.3850, 78.4867], [21.1458, 79.0882], [26.9124, 75.7873]],
+                currentIdx: 0,
+                progress: 0.0
+            },
+            {
+                name: "Rajdhani Express",
+                path: [[28.6139, 77.2090], [26.8467, 80.9462], [25.3176, 82.9739], [22.5726, 88.3639]],
+                currentIdx: 1,
+                progress: 0.3
+            },
+            {
+                name: "Vande Bharat Express",
+                path: [[13.0827, 80.2707], [12.9716, 77.5946], [11.0168, 76.9558]],
+                currentIdx: 0,
+                progress: 0.6
+            },
+            {
+                name: "Goa Express",
+                path: [[15.2993, 74.1240], [15.3173, 75.7139], [12.9716, 77.5946]],
+                currentIdx: 0,
+                progress: 0.2
+            }
         ];
 
-        // Draw the dashed black railway tracks on the map
-        railwayRoutes.forEach(routeCoords => {
-            L.polyline(routeCoords, {
-                color: '#000000',
-                weight: 2.5,
-                dashArray: '6, 6', // Creates the classic dashed railway look
-                opacity: 0.8
+        // Store active moving train markers
+        const movingTrainMarkers = [];
+
+        railwayRoutes.forEach(route => {
+            // 1. Draw Red Railway Track Lines
+            L.polyline(route.path, {
+                color: '#ef4444', // Red Line
+                weight: 3,
+                opacity: 0.8,
+                dashArray: '5, 10'
             }).addTo(map);
-        });
 
-        let movingTrains = [];
+            // 2. Create Green Moving Train Marker
+            const greenIcon = L.divIcon({
+                className: 'moving-train-icon',
+                html: `<div style="background-color: #10b981; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #ffffff; box-shadow: 0 0 10px #10b981;"></div>`,
+                iconSize: [14, 14]
+            });
 
-        // Spawn moving trains that travel along these exact track coordinates
-        railwayRoutes.forEach((route, index) => {
-            let isDelayed = Math.random() < 0.3; // 30% red (delayed), 70% blue (smooth)
-            let iconClass = isDelayed ? 'train-icon-red' : 'train-icon-blue';
+            const startCoords = route.path[0];
+            const marker = L.marker(startCoords, { icon: greenIcon }).addTo(map);
             
-            let trainIcon = L.divIcon({
-                className: iconClass,
-                iconSize: [10, 10],
-                iconAnchor: [5, 5]
-            });
+            marker.bindPopup(`
+                <div style="padding: 4px;">
+                    <strong style="color: #4f46e5; font-size: 13px;">${route.name}</strong><br>
+                    <span style="font-size: 12px; color: #64748b;">Status:</span> <span style="color: #10b981; font-weight: bold;">Moving Live</span><br>
+                    <span style="font-size: 12px; color: #64748b;">Speed:</span> <b>85 km/h</b>
+                </div>
+            `);
 
-            let marker = L.marker(route[0], { icon: trainIcon }).addTo(map);
-
-            movingTrains.push({
-                marker: marker,
-                route: route,
-                segmentIndex: 0,
-                progress: Math.random(),
-                speed: 0.015 + Math.random() * 0.02
-            });
+            movingTrainMarkers.push({ marker: marker, route: route });
         });
 
-        // Animate trains along the track segments smoothly
-        setInterval(() => {
-            movingTrains.forEach(t => {
-                t.progress += t.speed;
-                if (t.progress >= 1) {
-                    t.progress = 0;
-                    t.segmentIndex = (t.segmentIndex + 1) % (t.route.length - 1);
+        // 3. Animate the Green Trains smoothly along the Red Tracks
+        function animateTrains() {
+            movingTrainMarkers.forEach(item => {
+                let route = item.route;
+                route.progress += 0.005;
+
+                if (route.progress >= 1.0) {
+                    route.progress = 0.0;
+                    route.currentIdx = (route.currentIdx + 1) % (route.path.length - 1);
                 }
 
-                let p1 = t.route[t.segmentIndex];
-                let p2 = t.route[t.segmentIndex + 1];
+                let p1 = route.path[route.currentIdx];
+                let p2 = route.path[route.currentIdx + 1] || route.path[0];
 
-                let currentLat = p1[0] + (p2[0] - p1[0]) * t.progress;
-                let currentLng = p1[1] + (p2[1] - p1[1]) * t.progress;
+                let lat = p1[0] + (p2[0] - p1[0]) * route.progress;
+                let lng = p1[1] + (p2[1] - p1[1]) * route.progress;
 
-                t.marker.setLatLng([currentLat, currentLng]);
+                item.marker.setLatLng([lat, lng]);
             });
-        }, 1200);
+        }
+
+        setInterval(animateTrains, 80);
     </script>
 </body>
 </html>

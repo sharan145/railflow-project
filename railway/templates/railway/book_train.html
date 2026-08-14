@@ -3,198 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complete Booking — RailFlow</title>
+    <title>Visual Seat Matrix — RailFlow</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Razorpay Checkout Script -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-center items-center p-4 md:p-6">
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center p-4 md:p-6">
 
-    <div class="max-w-2xl w-full bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-200 space-y-6">
+    <div class="max-w-3xl w-full bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-200 space-y-6">
         <div>
             <a href="{% url 'index' %}" class="text-sm font-semibold text-indigo-600 hover:underline">← Back to Search</a>
-            <h1 class="text-2xl font-extrabold text-slate-900 mt-2">Passenger & Seat Selection</h1>
-            <p class="text-slate-500 text-sm">Select your class/status, review your train details, and proceed with Razorpay payment.</p>
+            <h1 class="text-2xl font-extrabold text-slate-900 mt-2">Coach & Visual Seat Selection</h1>
+            <p class="text-slate-500 text-sm">Choose your date and class, pick your berths/seats, and checkout securely via Razorpay.</p>
         </div>
 
         <!-- Train Summary Card -->
         <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
             <div class="flex justify-between items-center">
                 <span class="font-bold text-indigo-600">{{ train.train_number }} - {{ train.name }}</span>
-                <span class="bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs px-2.5 py-1 rounded-full font-semibold">
-                    Remaining Seats: {{ train.available_seats }}
-                </span>
+                <span class="text-xl font-extrabold text-slate-900">₹{{ train.fare }} <span class="text-xs font-normal text-slate-500">/ seat</span></span>
             </div>
-            <p class="text-sm text-slate-600">
-                Route: <strong>{{ train.source.code }}</strong> ➔ <strong>{{ train.destination.code }}</strong>
-            </p>
-            <div class="flex justify-between items-center pt-2 border-t border-slate-200">
-                <span class="text-sm text-slate-500">Total Fare Amount:</span>
-                <span class="text-xl font-bold text-slate-900">₹{{ train.fare }}</span>
-            </div>
+            <p class="text-sm text-slate-600">Route: <strong>{{ train.source.code }}</strong> ➔ <strong>{{ train.destination.code }}</strong></p>
         </div>
 
-        <!-- Interactive Availability & Class Matrix (Inspired by IRCTC Layout) -->
+        <!-- Filters: Date & Class Selector Form -->
+        <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Change Travel Date</label>
+                <input type="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Select Coach Class</label>
+                <select name="class" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-sm focus:outline-none focus:border-indigo-500 font-semibold text-indigo-600">
+                    {% for c in available_classes %}
+                        <option value="{{ c }}" {% if selected_class == c %}selected{% endif %}>
+                            {% if c == '1A' %}First AC (1A)
+                            {% elif c == '2A' %}AC 2-Tier (2A)
+                            {% elif c == '3A' %}AC 3-Tier (3A)
+                            {% elif c == 'SL' %}Sleeper (SL)
+                            {% elif c == 'CC' %}AC Chair Car (CC)
+                            {% elif c == 'EC' %}Executive Chair Car (EC)
+                            {% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+
+        <!-- Visual Coach Layout Matrix Grid -->
         <div>
-            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Select Availability & Class Status</label>
-            <div class="overflow-x-auto border border-slate-200 rounded-2xl">
-                <table class="w-full text-left border-collapse bg-white text-sm">
-                    <thead>
-                        <tr class="bg-teal-800 text-white text-xs">
-                            <th class="p-3">Day/Date</th>
-                            <th class="p-3 text-center">2A</th>
-                            <th class="p-3 text-center">3A</th>
-                            <th class="p-3 text-center">SL</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 text-xs">
-                        <tr>
-                            <td class="p-3 font-medium text-slate-700">Wed 29/05</td>
-                            <td class="p-3 text-center">
-                                <button type="button" onclick="selectClassAndStatus('2A', 'RAC 1', this)" class="class-btn bg-orange-600 text-white px-2.5 py-1 rounded font-semibold hover:bg-orange-700 transition">RAC 1</button>
-                            </td>
-                            <td class="p-3 text-center">
-                                <button type="button" onclick="selectClassAndStatus('3A', 'AVL-0110', this)" class="class-btn bg-emerald-600 text-white px-2.5 py-1 rounded font-semibold hover:bg-emerald-700 transition">AVL-0110</button>
-                            </td>
-                            <td class="p-3 text-center">
-                                <button type="button" onclick="selectClassAndStatus('SL', 'AVL-0219', this)" class="class-btn bg-emerald-600 text-white px-2.5 py-1 rounded font-semibold hover:bg-emerald-700 transition">AVL-0219</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="p-3 font-medium text-slate-700">Thu 30/05</td>
-                            <td class="p-3 text-center">
-                                <button type="button" onclick="selectClassAndStatus('2A', 'RAC 1', this)" class="class-btn bg-orange-600 text-white px-2.5 py-1 rounded font-semibold hover:bg-orange-700 transition">RAC 1</button>
-                            </td>
-                            <td class="p-3 text-center">
-                                <button type="button" onclick="selectClassAndStatus('3A', 'AVL-0119', this)" class="class-btn bg-emerald-600 text-white px-2.5 py-1 rounded font-semibold hover:bg-emerald-700 transition">AVL-0119</button>
-                            </td>
-                            <td class="p-3 text-center">
-                                <button type="button" onclick="selectClassAndStatus('SL', 'AVL-0208', this)" class="class-btn bg-emerald-600 text-white px-2.5 py-1 rounded font-semibold hover:bg-emerald-700 transition">AVL-0208</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="p-3 font-medium text-slate-700">Sat 01/06</td>
-                            <td class="p-3 text-center">
-                                <button type="button" onclick="selectClassAndStatus('2A', 'AVL-0002', this)" class="class-btn bg-emerald-600 text-white px-2.5 py-1 rounded font-semibold hover:bg-emerald-700 transition">AVL-0002</button>
-                            </td>
-                            <td class="p-3 text-center">
-                                <button type="button" onclick="selectClassAndStatus('3A', 'AVL-0052', this)" class="class-btn bg-emerald-600 text-white px-2.5 py-1 rounded font-semibold hover:bg-emerald-700 transition">AVL-0052</button>
-                            </td>
-                            <td class="p-3 text-center">
-                                <button type="button" onclick="selectClassAndStatus('SL', 'AVL-0139', this)" class="class-btn bg-emerald-600 text-white px-2.5 py-1 rounded font-semibold hover:bg-emerald-700 transition">AVL-0139</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="flex justify-between items-center mb-2">
+                <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Coach Layout Map ({{ selected_class }})</label>
+                <div class="flex items-center space-x-3 text-xs">
+                    <span class="flex items-center"><span class="w-3 h-3 bg-emerald-100 border border-emerald-300 rounded-sm inline-block mr-1"></span> Available</span>
+                    <span class="flex items-center"><span class="w-3 h-3 bg-slate-200 border border-slate-300 rounded-sm inline-block mr-1"></span> Reserved (X)</span>
+                </div>
             </div>
-            <p id="selection-display" class="text-xs font-medium text-indigo-600 mt-2">No seat/status selected yet. Please click an option above.</p>
+
+            <!-- Add this inside your book_train.html template -->
+            <div class="coach-customizer-container" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border-radius: 12px; padding: 20px; color: #fff;">
+               <h3>💺 Visual Coach Berth Customizer</h3>
+                  <p>Select your preferred berth position interactively:</p>
+    
+            <div class="berth-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px;">
+                   {% for seat in seats %}
+                  <div class="berth-card {% if seat.is_booked %}booked{% else %}available{% endif %}" 
+                       data-seat="{{ seat.seat_number }}" 
+                       style="padding: 15px; text-align: center; border-radius: 8px; background: {% if seat.is_booked %}#e53e3e{% else %}#319795{% endif %}; cursor: pointer; transition: transform 0.2s;">
+                      <span style="display: block; font-weight: bold;">{{ seat.seat_number }}</span>
+                      <small>{{ seat.seat_type }}</small>
+                  </div>
+                   {% endfor %}
+               </div> 
+            </div>
+
+
+            <!-- Train Carriage Container -->
+            <div class="border-2 border-slate-300 rounded-3xl p-5 bg-slate-900/5 max-h-96 overflow-y-auto space-y-4 shadow-inner">
+                <div class="text-center text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-2">Front / Engine Direction ➔</div>
+                
+                {% if seats %}
+                    <div class="grid grid-cols-4 sm:grid-cols-6 gap-2.5">
+                        {% for seat in seats %}
+                            {% if seat.is_booked %}
+                                <!-- Booked / Reserved Seat (Greyed out with an X, unclickable) -->
+                                <button type="button" disabled class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-200 border border-slate-300 text-slate-500 opacity-80 cursor-not-allowed text-xs font-bold shadow-sm">
+                                    <span class="text-[11px] font-black text-slate-400 tracking-wider">✕</span>
+                                    <span class="text-sm font-extrabold line-through text-slate-500">{{ seat.seat_number }}</span>
+                                </button>
+                            {% else %}
+                                <!-- Available Seat (Clickable Multi-select Green) -->
+                                <button type="button" 
+                                        onclick="selectSeat('{{ seat.coach_class }}', '{{ seat.seat_number }}', '{{ seat.travel_date|date:'Y-m-d' }}', this)" 
+                                        class="seat-btn flex flex-col items-center justify-center p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 hover:border-emerald-500 transition text-emerald-900 text-xs font-bold shadow-sm cursor-pointer">
+                                    <span class="text-base font-extrabold">{{ seat.seat_number }}</span>
+                                </button>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8 text-slate-400 text-sm">
+                        ⚠️ No seats found configured for class <strong>{{ selected_class }}</strong> on <strong>{{ selected_date }}</strong>.
+                    </div>
+                {% endif %}
+
+                <div class="text-center text-[11px] font-bold text-slate-400 uppercase tracking-widest border-t border-slate-200 pt-2">Rear / Lavatory Direction</div>
+            </div>
+            <p id="selection-display" class="text-xs font-semibold text-indigo-600 mt-2.5">No seats selected yet. Click available green berths above.</p>
         </div>
 
-        <!-- Passenger Form -->
-        <form id="booking-form" class="space-y-4">
+        <!-- Passenger Form & Checkout -->
+        <form id="booking-form" class="space-y-4" onsubmit="return false;">
             <div>
                 <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Passenger Full Name</label>
-                <input type="text" id="passenger_name" required placeholder="e.g. Rahul Sharma" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
+                <input type="text" id="passenger_name" name="passenger_name" required placeholder="e.g. Rahul Sharma" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
             </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Journey Date</label>
-                <input type="date" id="travel_date" required class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
-            </div>
+            
+            <input type="hidden" id="travel_date" name="travel_date" value="{{ selected_date }}">
+            <input type="hidden" id="selected_seat_status" name="selected_seat_status">
 
-            <!-- Hidden input to store selected seat string -->
-            <input type="hidden" id="selected_seat_status">
-
-            <button type="button" id="pay-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/20">
-                Pay ₹{{ train.fare }} & Book Ticket
+            <button type="button" id="pay-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/20 cursor-pointer">
+                Pay ₹{{ train.fare }} & Confirm Booking
             </button>
         </form>
     </div>
 
     <script>
-        let chosenSeatStatus = "";
+        // Array to manage multiple seat selections
+        let chosenSeats = [];
+        const baseFare = parseFloat("{{ train.fare }}") || 0;
 
-        function selectClassAndStatus(coachClass, statusText, btnElement) {
-            document.querySelectorAll('.class-btn').forEach(b => {
-                b.classList.remove('ring-4', 'ring-indigo-300');
-            });
+        function selectSeat(coachClass, seatNum, seatDate, btnElement) {
+            const seatId = `${coachClass}-${seatNum}`;
             
-            btnElement.classList.add('ring-4', 'ring-indigo-300');
+            const index = chosenSeats.indexOf(seatId);
+            if (index > -1) {
+                // Deselect if already clicked
+                chosenSeats.splice(index, 1);
+                btnElement.classList.remove('border-indigo-600', 'bg-indigo-100', 'ring-2', 'ring-indigo-400');
+            } else {
+                // Select and highlight
+                chosenSeats.push(seatId);
+                btnElement.classList.add('border-indigo-600', 'bg-indigo-100', 'ring-2', 'ring-indigo-400');
+            }
             
-            chosenSeatStatus = `${coachClass} - ${statusText}`;
-            document.getElementById('selected_seat_status').value = chosenSeatStatus;
-            document.getElementById('selection-display').innerText = `Selected Option: ${chosenSeatStatus}`;
+            // Update hidden input with comma-separated values (e.g., "3A-1,3A-2")
+            document.getElementById('selected_seat_status').value = chosenSeats.join(',');
+
+            const displayMsg = document.getElementById('selection-display');
+            const currentTotal = baseFare * chosenSeats.length;
+
+            if (chosenSeats.length > 0) {
+                displayMsg.innerText = `Selected Berths (${chosenSeats.length}): ${chosenSeats.join(', ')} | Total: ₹${currentTotal}`;
+                displayMsg.classList.remove('text-red-500');
+                displayMsg.classList.add('text-indigo-600');
+                document.getElementById('pay-btn').innerText = `Pay ₹${currentTotal} (${chosenSeats.length} Seats) & Confirm`;
+            } else {
+                displayMsg.innerText = "No seats selected yet. Click available green berths above.";
+                displayMsg.classList.add('text-indigo-600');
+                document.getElementById('pay-btn').innerText = `Pay ₹${baseFare} & Confirm Booking`;
+            }
         }
 
-        document.getElementById('pay-btn').onclick = function (e) {
-            const name = document.getElementById('passenger_name').value;
+        document.getElementById('pay-btn').onclick = function () {
+            const nameField = document.getElementById('passenger_name');
+            const name = nameField.value.trim();
             const date = document.getElementById('travel_date').value;
 
-            if(!name || !date) {
-                alert("Please fill in passenger full name and journey date.");
+            if(!name) {
+                alert("Please fill in passenger full name.");
+                nameField.focus();
                 return;
             }
 
-            if(!chosenSeatStatus) {
-                alert("Please select a class and availability status from the matrix table above.");
+             // Simple script to let users click and select a visual berth
+    document.querySelectorAll('.berth-card.available').forEach(card => {
+        card.addEventListener('click', function() {
+            document.querySelectorAll('.berth-card').forEach(c => c.style.border = 'none');
+            this.style.border = '3px solid #ffcc00';
+            document.getElementById('selected_seat_input').value = this.getAttribute('data-seat');
+        });
+    });
+
+            if(chosenSeats.length === 0) {
+                const displayMsg = document.getElementById('selection-display');
+                displayMsg.innerText = "⚠️ Please select at least one available green seat from the coach map!";
+                displayMsg.classList.remove('text-indigo-600');
+                displayMsg.classList.add('text-red-500');
+                alert("Please select at least one seat from the matrix map.");
                 return;
             }
 
-            const rawFare = parseFloat("{{ train.fare }}") || 0;
-            const fareAmount = Math.round(rawFare * 100);
+            const totalFare = baseFare * chosenSeats.length;
+            const fareAmount = Math.round(totalFare * 100); // Amount in paise for Razorpay
 
             var options = {
                 "key": "{{ razorpay_key_id }}", 
                 "amount": fareAmount, 
                 "currency": "INR",
                 "name": "RailFlow Railways",
-                "description": "Ticket Booking for {{ train.name }}",
+                "description": `Booking ${chosenSeats.length} seat(s) for {{ train.name }}`,
                 "handler": function (response) {
-                    console.log("Razorpay payment response received:", response);
-
                     const formData = new FormData();
                     formData.append('train_id', '{{ train.id }}');
                     formData.append('passenger_name', name);
                     formData.append('travel_date', date);
-                    formData.append('seat_number', chosenSeatStatus);
+                    formData.append('seat_number', chosenSeats.join(','));
                     formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
                     fetch("{% url 'verify_payment' %}", {
                         method: 'POST',
                         body: formData
                     })
-                    .then(res => {
-                        console.log("Server response status code:", res.status);
-                        return res.text(); // Read as text first to catch any HTML error pages cleanly
-                    })
-                    .then(text => {
-                        console.log("Raw server response text:", text);
-                        try {
-                            const data = JSON.parse(text);
-                            if(data.status === 'success') {
-                                alert("Payment Successful! Booking Confirmed.\nYour PNR: " + data.pnr + "\nSeat/Status: " + chosenSeatStatus);
-                                window.location.href = "{% url 'index' %}";
-                            } else {
-                                alert("Error saving booking: " + data.message);
-                            }
-                        } catch (e) {
-                            console.error("Failed to parse JSON response from server:", text);
-                            alert("Server returned a non-JSON response. Check browser console (F12) for details.");
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data.status === 'success') {
+                            alert("Payment Successful! PNR: " + data.pnr + "\nSeats Booked: " + chosenSeats.join(', '));
+                            window.location.href = "{% url 'index' %}";
+                        } else {
+                            alert("Error saving booking: " + data.message);
                         }
                     })
                     .catch(err => {
-                        console.error("Network or Fetch error:", err);
-                        alert("Network or Server error occurred while saving booking.");
+                        alert("Network or Server error during verification.");
                     });
                 },
-                "prefill": {
-                    "name": name,
-                    "email": "{{ request.user.email }}"
-                },
-                "theme": {
-                    "color": "#4f46e5"
-                }
+                "prefill": { "name": name, "contact": "+919999999999" },
+                "theme": { "color": "#4f46e5" }
             };
             
             var rzp1 = new Razorpay(options);

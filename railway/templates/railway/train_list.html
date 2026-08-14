@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Train Chart & Schedule — RailFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center p-4 md:p-6">
+
+    <div class="max-w-5xl w-full bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-200 space-y-6">
+        
+        <!-- Header Section -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <a href="{% url 'index' %}" class="text-sm font-semibold text-indigo-600 hover:underline">← Back to Home</a>
+                <h1 class="text-2xl font-extrabold text-slate-900 mt-1">Live Train Chart & Schedule</h1>
+                <p class="text-slate-500 text-sm">Browse all running trains, routes, and starting fares.</p>
+            </div>
+            <form method="GET" action="{% url 'train_list' %}" class="flex gap-2 w-full md:w-auto">
+                <input type="text" name="source" value="{{ source_query }}" placeholder="From (e.g. SBC)" class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-sm w-32 focus:outline-none focus:border-indigo-500">
+                <input type="text" name="destination" value="{{ dest_query }}" placeholder="To (e.g. MYS)" class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-sm w-32 focus:outline-none focus:border-indigo-500">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition">Filter</button>
+            </form>
+        </div>
+
+        <!-- Train Chart Table / Grid -->
+        <div class="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+                        <th class="p-4 font-semibold">Train No & Name</th>
+                        <th class="p-4 font-semibold">Route</th>
+                        <th class="p-4 font-semibold">Base Fare</th>
+                        <th class="p-4 font-semibold text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm">
+                    {% if trains %}
+                        {% for train in trains %}
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="p-4">
+                                    <div class="font-bold text-indigo-600">{{ train.train_number }}</div>
+                                    <div class="text-slate-900 font-medium">{{ train.name }}</div>
+                                </td>
+                                <td class="p-4 text-slate-600">
+                                    <span class="font-semibold text-slate-800">{{ train.source.code }}</span> ➔ <span class="font-semibold text-slate-800">{{ train.destination.code }}</span>
+                                </td>
+                                <td class="p-4 font-extrabold text-slate-900">
+                                    ₹{{ train.fare }}
+                                </td>
+                                <td class="p-4 text-right">
+                                    <a href="{% url 'book_train' train.id %}" class="inline-block bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 font-semibold px-4 py-2 rounded-xl text-xs transition border border-indigo-100">
+                                        Select Seats →
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-8 text-slate-400">
+                                ⚠️ No trains found matching your search parameters.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</body>
+</html>
