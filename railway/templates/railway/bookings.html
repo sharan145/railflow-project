@@ -158,6 +158,7 @@
     }
 }
 
+
     function triggerSOS(bookingId) {
         if (confirm("⚠️ WARNING: This will immediately dispatch the Railway Protection Force (RPF) and On-Train Conductor to your exact seat. Proceed?")) {
             fetch(`/trigger-sos/${bookingId}/`, {
