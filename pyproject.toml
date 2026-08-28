@@ -1,2 +1,12 @@
+[project]
+name = "railflow-project"
+version = "0.1.0"
+description = "Django railway project"
+requires-python = ">=3.10"
+dependencies = [
+    "django>=4.0",
+    "gunicorn",
+]
+
 [tool.vercel]
 entrypoint = "railflow_project.asgi:application"
